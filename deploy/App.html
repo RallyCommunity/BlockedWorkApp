@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BlockedApp</title>
+
+    <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
+
+
+
+    <script type="text/javascript">
+        Rally.onReady(function () {
+(function() {
+  Ext.define('CustomApp', {
+    extend: 'Rally.app.App',
+    componentCls: 'app',
+    launch: function() {
+      return this.getBlockedStories();
+    },
+    getBlockedStories: function() {
+      var storyStore;
+      return storyStore = Ext.create('Rally.data.WsapiDataStore', {
+        autoLoad: true,
+        model: 'HierarchicalRequirement',
+        fetch: ['Name', 'RevisionHistory', 'FormattedID', 'ObjectID', 'BlockedReason'],
+        filters: [
+          {
+            property: 'Blocked',
+            operator: '=',
+            value: true
+          }
+        ],
+        listeners: {
+          load: function(store, storyRecords) {
+            return _.each(storyRecords, function(storyRecord) {
+              return Rally.data.ModelFactory.getModel({
+                type: 'RevisionHistory',
+                scope: this,
+                success: function(model) {
+                  return this._onModelLoaded(model, storyRecord);
+                }
+              });
+            }, this);
+          },
+          scope: this
+        }
+      });
+    },
+    _onModelLoaded: function(model, storyRecord) {
+      return model.load(Rally.util.Ref.getOidFromRef(storyRecord.data.RevisionHistory._ref), {
+        scope: this,
+        success: function(revisionHistoryRecord) {
+          return this._onRevisionHistoryLoaded(revisionHistoryRecord, storyRecord);
+        }
+      });
+    },
+    _onRevisionHistoryLoaded: function(revisionHistoryRecord, storyRecord) {
+      return revisionHistoryRecord.getCollection('Revisions').load({
+        fetch: ['RevisionNumber', 'CreationDate', 'User', 'Description'],
+        scope: this,
+        callback: function(revisions) {
+          var blockedRevision;
+          blockedRevision = _.find(revisions, function(revision) {
+            return revision.data.Description.indexOf("BLOCKED changed from [false] to [true]") !== -1;
+          });
+          if (blockedRevision !== void 0) {
+            return this._addStoryPanel(storyRecord, blockedRevision);
+          }
+        }
+      });
+    },
+    _addStoryPanel: function(storyRecord, blockedRevision) {
+      var storyPanel, storyTemplate;
+      console.log(storyRecord);
+      storyTemplate = new Ext.Template('<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">\
+        <b><a href={ID_URL} target="_parent">{formattedID}</a> {storyName}</b> <br> \
+\
+        <img style="float:left;" src="{image_URL}"/> \
+        <div style="float:left;margin-left:10px;">\
+          Blocked {blockedTime} by <a href={user_URL} target="_parent"> {userName} </a> <br>\
+          {blockedReason}\
+        </div>\
+      </span>');
+      storyPanel = Ext.create('Ext.panel.Panel', {
+        tpl: storyTemplate,
+        data: {
+          ID_URL: Rally.nav.Manager.getDetailUrl(storyRecord),
+          formattedID: storyRecord.data.FormattedID,
+          storyName: storyRecord.data.Name,
+          image_URL: Rally.environment.getServer().getContextUrl() + '/profile/viewThumbnailImage.sp?tSize=40&uid=' + blockedRevision.data.User.ObjectID,
+          blockedTime: blockedRevision.data._CreatedAt,
+          userName: blockedRevision.data.User._refObjectName,
+          user_URL: Rally.nav.Manager.getDetailUrl(blockedRevision.data.User._ref),
+          blockedReason: storyRecord.data.BlockedReason !== "" ? "Reason: " + storyRecord.data.BlockedReason : ""
+        }
+      });
+      return this.add(storyPanel);
+    }
+  });
+
+}).call(this);
+
+            
+            Rally.launchApp('CustomApp', {
+                name:"BlockedApp",
+                parentRepos:""
+            });
+
+        });
+    </script>
+
+
+
+
+    <style type="text/css">
+.app {
+     /* Add app styles here */
+}
+
+    </style>
+
+</head>
+<body></body>
+</html>
