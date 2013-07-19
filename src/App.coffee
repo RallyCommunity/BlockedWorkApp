@@ -58,7 +58,7 @@ Ext.define('CustomApp', {
       '<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">
         <b><a href={ID_URL} target="_parent">{formattedID}</a> {storyName}</b> <br> 
 
-        <img style="float:left;" src="{image_URL}"/> 
+        <a href={user_URL} target="_parent" style="float:left;"> <img src="{image_URL}"/> </a>
         <div style="float:left;margin-left:10px;">
           Blocked {blockedTime} by <a href={user_URL} target="_parent"> {userName} </a> <br>
           {blockedReason} <br>
@@ -80,8 +80,9 @@ Ext.define('CustomApp', {
           user_URL: Rally.nav.Manager.getDetailUrl(blockedRevision.data.User._ref)
           blockedReason: if storyRecord.data.BlockedReason != "" then "Reason: " + storyRecord.data.BlockedReason else ""
           DirectChildrenCount: storyRecord.data.DirectChildrenCount
+
     )
-    
+
     @add(storyPanel)
 
 })
