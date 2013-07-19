@@ -11,7 +11,7 @@ Ext.define('CustomApp', {
 
         autoLoad: true
         model: 'HierarchicalRequirement'            
-        fetch: ['Name', 'RevisionHistory', 'FormattedID', 'ObjectID', 'BlockedReason']
+        fetch: ['Name', 'RevisionHistory', 'FormattedID', 'ObjectID', 'BlockedReason', 'DirectChildrenCount']
         filters: [
             property: 'Blocked', operator: '=', value: true
           ,
@@ -53,7 +53,6 @@ Ext.define('CustomApp', {
 
   _addStoryPanel: (storyRecord, blockedRevision) ->
 
-    console.log(storyRecord)
 
     storyTemplate = new Ext.Template(
       '<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">
@@ -80,6 +79,7 @@ Ext.define('CustomApp', {
           userName: blockedRevision.data.User._refObjectName
           user_URL: Rally.nav.Manager.getDetailUrl(blockedRevision.data.User._ref)
           blockedReason: if storyRecord.data.BlockedReason != "" then "Reason: " + storyRecord.data.BlockedReason else ""
+          DirectChildrenCount: storyRecord.data.DirectChildrenCount
     )
     
     @add(storyPanel)

@@ -10,7 +10,7 @@
       return storyStore = Ext.create('Rally.data.WsapiDataStore', {
         autoLoad: true,
         model: 'HierarchicalRequirement',
-        fetch: ['Name', 'RevisionHistory', 'FormattedID', 'ObjectID', 'BlockedReason'],
+        fetch: ['Name', 'RevisionHistory', 'FormattedID', 'ObjectID', 'BlockedReason', 'DirectChildrenCount'],
         filters: [
           {
             property: 'Blocked',
@@ -63,7 +63,6 @@
     },
     _addStoryPanel: function(storyRecord, blockedRevision) {
       var storyPanel, storyTemplate;
-      console.log(storyRecord);
       storyTemplate = new Ext.Template('<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">\
         <b><a href={ID_URL} target="_parent">{formattedID}</a> {storyName}</b> <br> \
 \
@@ -83,7 +82,8 @@
           blockedTime: blockedRevision.data._CreatedAt,
           userName: blockedRevision.data.User._refObjectName,
           user_URL: Rally.nav.Manager.getDetailUrl(blockedRevision.data.User._ref),
-          blockedReason: storyRecord.data.BlockedReason !== "" ? "Reason: " + storyRecord.data.BlockedReason : ""
+          blockedReason: storyRecord.data.BlockedReason !== "" ? "Reason: " + storyRecord.data.BlockedReason : "",
+          DirectChildrenCount: storyRecord.data.DirectChildrenCount
         }
       });
       return this.add(storyPanel);
