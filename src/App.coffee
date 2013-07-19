@@ -14,6 +14,8 @@ Ext.define('CustomApp', {
         fetch: ['Name', 'RevisionHistory', 'FormattedID', 'ObjectID', 'BlockedReason']
         filters: [
             property: 'Blocked', operator: '=', value: true
+          ,
+            property: 'DirectChildrenCount', operator: '=', value: 0
         ]
         listeners:
           load: (store, storyRecords) ->
@@ -52,12 +54,6 @@ Ext.define('CustomApp', {
 
   _addStoryPanel: (storyRecord, blockedRevision) ->
 
-
-    #Story Name: storyRecord.data.Name
-    #Story Formatted ID: storyRecord.data.FormattedID
-    #Revision Blocked Time: blockedRevision._CreatedAt
-    #Revision Blocked Person: blockedRevision.data.User.ObjectID
-
     console.log(storyRecord)
 
     storyTemplate = new Ext.Template(
@@ -67,7 +63,7 @@ Ext.define('CustomApp', {
         <img style="float:left;" src="{image_URL}" onmouseover="console.log(this);"/> 
         <div style="float:left;margin-left:10px;">
           Blocked {blockedTime} by <a href={user_URL} target="_parent"> {userName} </a> <br>
-          {blockedReason}
+          {blockedReason} <br>
         </div>
       </span>'
     )
@@ -85,7 +81,6 @@ Ext.define('CustomApp', {
           userName: blockedRevision.data.User._refObjectName
           user_URL: Rally.nav.Manager.getDetailUrl(blockedRevision.data.User._ref)
           blockedReason: if storyRecord.data.BlockedReason != "" then "Reason: " + storyRecord.data.BlockedReason else ""
-
     )
     
     @add(storyPanel)

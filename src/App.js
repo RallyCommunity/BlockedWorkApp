@@ -16,6 +16,10 @@
             property: 'Blocked',
             operator: '=',
             value: true
+          }, {
+            property: 'DirectChildrenCount',
+            operator: '=',
+            value: 0
           }
         ],
         listeners: {
@@ -66,7 +70,7 @@
         <img style="float:left;" src="{image_URL}" onmouseover="console.log(this);"/> \
         <div style="float:left;margin-left:10px;">\
           Blocked {blockedTime} by <a href={user_URL} target="_parent"> {userName} </a> <br>\
-          {blockedReason}\
+          {blockedReason} <br>\
         </div>\
       </span>');
       storyPanel = Ext.create('Ext.panel.Panel', {
