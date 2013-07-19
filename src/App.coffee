@@ -42,7 +42,6 @@ Ext.define('CustomApp', {
         fetch: ['RevisionNumber', 'CreationDate', 'User', 'Description'],
         scope: this,
         callback: (revisions) -> 
-            #BLOCKED changed from [false] to [true]
 
             blockedRevision = _.find(revisions, (revision) -> 
                 revision.data.Description.indexOf("BLOCKED changed from [false] to [true]") != -1
@@ -60,7 +59,7 @@ Ext.define('CustomApp', {
       '<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">
         <b><a href={ID_URL} target="_parent">{formattedID}</a> {storyName}</b> <br> 
 
-        <img style="float:left;" src="{image_URL}" onmouseover="console.log(this);"/> 
+        <img style="float:left;" src="{image_URL}"/> 
         <div style="float:left;margin-left:10px;">
           Blocked {blockedTime} by <a href={user_URL} target="_parent"> {userName} </a> <br>
           {blockedReason} <br>

@@ -67,7 +67,7 @@
       storyTemplate = new Ext.Template('<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">\
         <b><a href={ID_URL} target="_parent">{formattedID}</a> {storyName}</b> <br> \
 \
-        <img style="float:left;" src="{image_URL}" onmouseover="console.log(this);"/> \
+        <img style="float:left;" src="{image_URL}"/> \
         <div style="float:left;margin-left:10px;">\
           Blocked {blockedTime} by <a href={user_URL} target="_parent"> {userName} </a> <br>\
           {blockedReason} <br>\
