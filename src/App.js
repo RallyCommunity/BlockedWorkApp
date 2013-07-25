@@ -10,7 +10,7 @@
       return storyStore = Ext.create('Rally.data.WsapiDataStore', {
         autoLoad: true,
         model: 'HierarchicalRequirement',
-        fetch: ['Name', 'RevisionHistory', 'FormattedID', 'ObjectID', 'BlockedReason', 'DirectChildrenCount'],
+        fetch: ['Name', 'FormattedID', 'ObjectID', 'BlockedReason', 'DirectChildrenCount', 'Blocker'],
         filters: [
           {
             property: 'Blocked',
@@ -25,43 +25,34 @@
         listeners: {
           load: function(store, storyRecords) {
             return _.each(storyRecords, function(storyRecord) {
-              return Rally.data.ModelFactory.getModel({
-                type: 'RevisionHistory',
-                scope: this,
-                success: function(model) {
-                  return this._onModelLoaded(model, storyRecord);
-                }
-              });
+              return this._loadBlockers(storyRecord);
             }, this);
           },
           scope: this
         }
       });
     },
-    _onModelLoaded: function(model, storyRecord) {
-      return model.load(Rally.util.Ref.getOidFromRef(storyRecord.data.RevisionHistory._ref), {
-        scope: this,
-        success: function(revisionHistoryRecord) {
-          return this._onRevisionHistoryLoaded(revisionHistoryRecord, storyRecord);
-        }
-      });
-    },
-    _onRevisionHistoryLoaded: function(revisionHistoryRecord, storyRecord) {
-      return revisionHistoryRecord.getCollection('Revisions').load({
-        fetch: ['RevisionNumber', 'CreationDate', 'User', 'Description'],
-        scope: this,
-        callback: function(revisions) {
-          var blockedRevision;
-          blockedRevision = _.find(revisions, function(revision) {
-            return revision.data.Description.indexOf("BLOCKED changed from [false] to [true]") !== -1;
-          });
-          if (blockedRevision !== void 0) {
-            return this._addStoryPanel(storyRecord, blockedRevision);
+    _loadBlockers: function(storyRecord) {
+      var blockerStore;
+      return blockerStore = Ext.create('Rally.data.WsapiDataStore', {
+        autoLoad: true,
+        model: 'Blocker',
+        filters: [
+          {
+            property: 'ObjectID',
+            operator: '=',
+            value: storyRecord.data.Blocker.ObjectID
           }
+        ],
+        listeners: {
+          load: function(store, blockerRecord) {
+            return this._addStoryPanel(storyRecord, blockerRecord[0]);
+          },
+          scope: this
         }
       });
     },
-    _addStoryPanel: function(storyRecord, blockedRevision) {
+    _addStoryPanel: function(storyRecord, blockerRecord) {
       var storyPanel, storyTemplate;
       storyTemplate = new Ext.Template('<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">\
         <b><a href={ID_URL} target="_parent">{formattedID}</a> {storyName}</b> <br> \
@@ -78,10 +69,10 @@
           ID_URL: Rally.nav.Manager.getDetailUrl(storyRecord),
           formattedID: storyRecord.data.FormattedID,
           storyName: storyRecord.data.Name,
-          image_URL: Rally.environment.getServer().getContextUrl() + '/profile/viewThumbnailImage.sp?tSize=40&uid=' + blockedRevision.data.User.ObjectID,
-          blockedTime: blockedRevision.data._CreatedAt,
-          userName: blockedRevision.data.User._refObjectName,
-          user_URL: Rally.nav.Manager.getDetailUrl(blockedRevision.data.User._ref),
+          image_URL: Rally.environment.getServer().getContextUrl() + '/profile/viewThumbnailImage.sp?tSize=40&uid=' + blockerRecord.data.BlockedBy.ObjectID,
+          blockedTime: blockerRecord.data._CreatedAt,
+          userName: blockerRecord.data.BlockedBy._refObjectName,
+          user_URL: Rally.nav.Manager.getDetailUrl(blockerRecord.data.BlockedBy._ref),
           blockedReason: storyRecord.data.BlockedReason !== "" ? "Reason: " + storyRecord.data.BlockedReason : "",
           DirectChildrenCount: storyRecord.data.DirectChildrenCount
         }
