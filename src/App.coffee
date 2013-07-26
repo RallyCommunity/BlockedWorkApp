@@ -11,7 +11,7 @@ Ext.define('CustomApp', {
 
         autoLoad: true
         model: 'HierarchicalRequirement'            
-        fetch: ['Name', 'FormattedID', 'ObjectID', 'BlockedReason', 'DirectChildrenCount', 'Blocker']
+        fetch: ['Name', 'FormattedID', 'ObjectID', 'BlockedReason', 'DirectChildrenCount', 'Blocker,CreationDate,BlockedBy']
         filters: [
             property: 'Blocked', operator: '=', value: true
           ,
@@ -19,25 +19,25 @@ Ext.define('CustomApp', {
         ]
         listeners:
           load: (store, storyRecords) ->
+
+            sortFn = (o1, o2) ->
+              getDate = (o) ->
+                return Ext.Date.parse(o.data.Blocker.CreationDate, "c")
+              date1 = getDate(o1)
+              date2 = getDate(o2)
+              if date1 < date2 then return -1
+              if date1 == date2 then return 0
+              if date1 > date2 then return 1
+
+            storyRecords.sort(sortFn)
             _.each(storyRecords, (storyRecord) ->
-              @_loadBlockers(storyRecord)
+              @_addStoryPanel(storyRecord)
             , this)
           scope: this
 
       )
 
-  _loadBlockers: (storyRecord) ->
-    blockerStore = Ext.create('Rally.data.WsapiDataStore',
-      autoLoad: true
-      model: 'Blocker'
-      filters: [property: 'ObjectID', operator: '=', value: storyRecord.data.Blocker.ObjectID]
-      listeners: 
-        load: (store, blockerRecord) ->
-          @_addStoryPanel(storyRecord, blockerRecord[0])
-        scope: this
-    )
-
-  _addStoryPanel: (storyRecord, blockerRecord) ->
+  _addStoryPanel: (storyRecord) ->
 
     storyTemplate = new Ext.Template(
       '<span style="float:left;padding-left:5px;margin-top:10px;margin-bottom:5px">
@@ -59,10 +59,10 @@ Ext.define('CustomApp', {
           storyName: storyRecord.data.Name
           image_URL: Rally.environment.getServer().getContextUrl() + 
                     '/profile/viewThumbnailImage.sp?tSize=40&uid=' + 
-                    blockerRecord.data.BlockedBy.ObjectID
-          blockedTime: blockerRecord.data._CreatedAt
-          userName: blockerRecord.data.BlockedBy._refObjectName
-          user_URL: Rally.nav.Manager.getDetailUrl(blockerRecord.data.BlockedBy._ref)
+                    storyRecord.data.Blocker.BlockedBy.ObjectID
+          blockedTime: storyRecord.data.Blocker._CreatedAt
+          userName: storyRecord.data.Blocker.BlockedBy._refObjectName
+          user_URL: Rally.nav.Manager.getDetailUrl(storyRecord.data.Blocker.BlockedBy._ref)
           blockedReason: if storyRecord.data.BlockedReason != "" then "Reason: " + storyRecord.data.BlockedReason else ""
           DirectChildrenCount: storyRecord.data.DirectChildrenCount
 
